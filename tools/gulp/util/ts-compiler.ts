@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
 import * as path from 'path';
+import * as fs from 'fs';
 import * as chalk from 'chalk';
 
 /** Compiles a TypeScript project with possible extra options. */
@@ -12,7 +13,18 @@ export function compileProject(project: string, options: ts.CompilerOptions) {
 
   let emitResult = program.emit();
 
+  // Report any diagnostics from the TypeScript emit.
   checkDiagnostics(emitResult.diagnostics);
+}
+
+/** Reads a input file and transpiles it into a new file. */
+export function transpileFile(inputPath: string, outputPath: string, options: ts.CompilerOptions) {
+  let inputFile = fs.readFileSync(inputPath, 'utf-8');
+  let transpiled = ts.transpileModule(inputFile, { compilerOptions: options });
+
+  checkDiagnostics(transpiled.diagnostics);
+
+  fs.writeFileSync(outputPath, transpiled.outputText);
 }
 
 /** Parses a TypeScript project configuration. */
@@ -31,7 +43,7 @@ function parseProjectConfig(project: string, options: ts.CompilerOptions) {
 }
 
 /** Formats the TypeScript diagnostics into a error string. */
-export function formatDiagnostics(diagnostics: ts.Diagnostic[]): string {
+function formatDiagnostics(diagnostics: ts.Diagnostic[]): string {
   return diagnostics.map(diagnostic => {
     let res = ts.DiagnosticCategory[diagnostic.category];
 
@@ -47,7 +59,7 @@ export function formatDiagnostics(diagnostics: ts.Diagnostic[]): string {
 }
 
 /** Checks diagnostics and throws errors if present. */
-export function checkDiagnostics(diagnostics: ts.Diagnostic[]) {
+function checkDiagnostics(diagnostics: ts.Diagnostic[]) {
   if (diagnostics && diagnostics.length && diagnostics[0]) {
     console.error(formatDiagnostics(diagnostics));
     console.error(chalk.red('TypeScript compilation failed. Exiting process.'));
