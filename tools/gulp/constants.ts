@@ -17,6 +17,10 @@ export const HTML_MINIFIER_OPTIONS = {
   removeAttributeQuotes: false
 };
 
+export const UGLIFYJS_OPTIONS = {
+  preserveComments: 'license'
+};
+
 export const LICENSE_BANNER = `/**
   * @license Angular Material v${MATERIAL_VERSION}
   * Copyright (c) 2017 Google, Inc. https://material.angular.io/
