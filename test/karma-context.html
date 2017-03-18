@@ -1,0 +1,27 @@
+<!--
+  Karma custom context file that can be used to adjust client viewport dimensions.
+  Also the HTML doctype has been removed since it could cause issues with the viewport height.
+-->
+
+<html>
+<head>
+  <title>Angular Material Tests</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+</head>
+<body>
+  <script src="context.js"></script>
+  <script type="text/javascript">
+    %CLIENT_CONFIG%
+    window.__karma__.setupContext(window);
+    %MAPPINGS%
+  </script>
+
+  <!-- Test scripts that will be dynamically replaced with <script> tags -->
+  %SCRIPTS%
+
+  <script type="text/javascript">
+    window.__karma__.loaded();
+  </script>
+</body>
+</html>

@@ -50,6 +50,7 @@ module.exports = (config) => {
     },
 
     customLaunchers: customLaunchers,
+    customContextFile: 'test/karma-context.html',
 
     preprocessors: {
       'dist/@angular/material/**/*.js': ['sourcemap']
