@@ -1,30 +1,33 @@
 import {spawn} from 'child_process';
-import {existsSync, statSync} from 'fs';
+import {existsSync, statSync, copySync} from 'fs-extra';
+import {join} from 'path';
 import {task} from 'gulp';
-import gulpRunSequence = require('run-sequence');
-import path = require('path');
-import minimist = require('minimist');
+import {execTask, copyTask} from '../util/task_helpers';
+import {
+  DIST_RELEASE, DIST_BUNDLES, PROJECT_ROOT, COMPONENTS_DIR, DIST_MATERIAL
+} from '../constants';
 
-import {execTask, cleanTask} from '../util/task_helpers';
-import {DIST_COMPONENTS_ROOT} from '../constants';
+// There are no type definitions available for these imports.
+import gulpRunSequence = require('run-sequence');
+import minimist = require('minimist');
 
 const argv = minimist(process.argv.slice(3));
 
-/** Removes redundant spec files from the release. TypeScript creates definition files for specs. */
-// TODO(devversion): tsconfig files should share code and don't generate spec files for releases.
-task(':build:release:clean-spec', cleanTask('dist/**/*+(-|.)spec.*'));
-
-
 task('build:release', function(done: () => void) {
-  // Synchronously run those tasks.
   gulpRunSequence(
-    'clean',
-    ':build:components:release',
-    ':build:release:clean-spec',
+    'library:build',
+    ':build:release:copy',
     done
   );
 });
 
+/** Task that merges the different bundles and outputs into the release folder. */
+task(':build:release:copy', copyTask([
+  join(DIST_BUNDLES, '**/*.js'),
+  join(DIST_MATERIAL, '**/*'),
+  join(COMPONENTS_DIR, 'package.json'),
+  join(PROJECT_ROOT, 'LICENSE')
+], DIST_RELEASE));
 
 /** Make sure we're logged in. */
 task(':publish:whoami', execTask('npm', ['whoami'], {
@@ -36,13 +39,17 @@ task(':publish:logout', execTask('npm', ['logout']));
 
 
 function _execNpmPublish(label: string): Promise<{}> {
-  const packageDir = DIST_COMPONENTS_ROOT;
+  const packageDir = DIST_RELEASE;
   if (!statSync(packageDir).isDirectory()) {
     return;
   }
 
-  if (!existsSync(path.join(packageDir, 'package.json'))) {
+  if (!existsSync(join(packageDir, 'package.json'))) {
     throw new Error(`"${packageDir}" does not have a package.json.`);
+  }
+
+  if (!existsSync(join(packageDir, 'LICENSE'))) {
+    throw new Error(`"${packageDir}" does not have a LICENSE file`);
   }
 
   process.chdir(packageDir);

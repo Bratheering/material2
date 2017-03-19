@@ -1,7 +1,7 @@
 import {task, watch} from 'gulp';
 import * as path from 'path';
 
-import {SOURCE_ROOT, DIST_ROOT, PROJECT_ROOT} from '../constants';
+import {SOURCE_ROOT, DIST_E2EAPP, PROJECT_ROOT} from '../constants';
 import {
   tsBuildTask, copyTask, buildAppTask, execNodeTask, sequenceTask, serverTask
 } from '../util/task_helpers';
@@ -10,9 +10,9 @@ const gulpRunSequence = require('run-sequence');
 const gulpConnect = require('gulp-connect');
 
 const appDir = path.join(SOURCE_ROOT, 'e2e-app');
-const outDir = path.join(DIST_ROOT, 'packages', 'e2e-app');
-const PROTRACTOR_CONFIG_PATH = path.join(PROJECT_ROOT, 'test/protractor.conf.js');
+const outDir = DIST_E2EAPP;
 
+const PROTRACTOR_CONFIG_PATH = path.join(PROJECT_ROOT, 'test/protractor.conf.js');
 const tsconfigPath = path.join(appDir, 'tsconfig.json');
 
 task(':watch:e2eapp', () => {

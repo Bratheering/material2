@@ -1,7 +1,7 @@
 import {task, src, dest, watch} from 'gulp';
 import {join} from 'path';
 import {main as ngc} from '@angular/compiler-cli';
-import {SOURCE_ROOT, DIST_ROOT, UGLIFYJS_OPTIONS} from '../constants';
+import {SOURCE_ROOT, DIST_BUNDLES, DIST_MATERIAL, UGLIFYJS_OPTIONS} from '../constants';
 import {sequenceTask, sassBuildTask, copyTask, triggerLivereload} from '../util/task_helpers';
 import {createRollupBundle} from '../util/rollup-helper';
 import {transpileFile} from '../util/ts-compiler';
@@ -16,8 +16,8 @@ const libraryRoot = join(SOURCE_ROOT, 'lib');
 const tsconfigPath = join(libraryRoot, 'tsconfig.json');
 
 // Paths to the different output directories.
-const materialDir = join(DIST_ROOT, 'packages', 'material');
-const bundlesDir = join(DIST_ROOT, 'bundles');
+const materialDir = DIST_MATERIAL;
+const bundlesDir = DIST_BUNDLES;
 
 // Paths to the different output files.
 const esmMainFile = join(materialDir, 'index.js');
@@ -25,7 +25,7 @@ const fesm2015File = join(bundlesDir, 'material.js');
 const fesm2014File = join(bundlesDir, 'material.es5.js');
 const umdBundleFile = join(bundlesDir, 'material.umd.js');
 
-task('library', sequenceTask(
+task('library:build', sequenceTask(
   'clean',
   ['library:build:esm', 'library:assets'],
   // Inline assets into ESM output.
@@ -39,22 +39,14 @@ task('library', sequenceTask(
 
 /** [Watch task] Rebuilds the library whenever TS, SCSS, or HTML files change. */
 task('library:watch', () => {
-  watch(join(libraryRoot, '**/*.ts'), ['build:components', triggerLivereload]);
-  watch(join(libraryRoot, '**/*.scss'), ['build:components', triggerLivereload]);
-  watch(join(libraryRoot, '**/*.html'), ['build:components', triggerLivereload]);
+  watch(join(libraryRoot, '**/*.ts'), ['library:build', triggerLivereload]);
+  watch(join(libraryRoot, '**/*.scss'), ['library:build', triggerLivereload]);
+  watch(join(libraryRoot, '**/*.html'), ['library:build', triggerLivereload]);
 });
 
 /**
  * TypeScript Compilation Tasks. Tasks are creating ESM, FESM, UMD bundles for releases.
  **/
-
-task('library:build', sequenceTask(
-  'library:build:esm',
-  'library:build:fesm-2015',
-  'library:build:fesm-2014',
-  'library:build:umd',
-  'library:build:umd:min'
-));
 
 task('library:build:esm', () => ngc(tsconfigPath, {basePath: libraryRoot}));
 
