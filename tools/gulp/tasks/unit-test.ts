@@ -1,33 +1,31 @@
 import gulp = require('gulp');
 import path = require('path');
 
-import {compileProject} from '../util/ts-compiler';
+import {main as ngc} from '@angular/compiler-cli';
 import {PROJECT_ROOT, COMPONENTS_DIR} from '../constants';
 import {sequenceTask} from '../util/task_helpers';
 
 const karma = require('karma');
 const runSequence = require('run-sequence');
 
-/** Copies deps for unit tests to the build output. */
-gulp.task(':test:build:library-specs', () => compileProject('src/lib/tsconfig-specs.json'));
+const tsconfigFile = path.join(COMPONENTS_DIR, 'tsconfig-specs.json');
 
-/** Builds dependencies for unit tests. */
-gulp.task(':test:deps', sequenceTask(
+/** Builds the library with a tsconfig file that includes spec files. */
+gulp.task(':test:build:library-specs', () => ngc(tsconfigFile, {basePath: COMPONENTS_DIR}));
+
+/** Builds everything that is necessary for karma. */
+gulp.task(':test:build', sequenceTask(
   'clean',
   ':test:build:library-specs',
+  'library:assets',
   'library:assets:inline',
 ));
 
-
-/** Build unit test dependencies and then inlines resources (html, css) into the JS output. */
-gulp.task(':test:deps:inline', sequenceTask(':test:deps', ':inline-resources'));
-
 /**
- * Runs the unit tests once with inlined resources (html, css). Does not watch for changes.
- *
+ * Runs the unit tests. Does not watch for changes.
  * This task should be used when running tests on the CI server.
  */
-gulp.task('test:single-run', [':test:deps:inline'], (done: () => void) => {
+gulp.task('test:single-run', [':test:build'], (done: () => void) => {
   new karma.Server({
     configFile: path.join(PROJECT_ROOT, 'test/karma.conf.js'),
     singleRun: true
@@ -49,7 +47,7 @@ gulp.task('test:single-run', [':test:deps:inline'], (done: () => void) => {
  *
  * This task should be used when running unit tests locally.
  */
-gulp.task('test', [':test:deps'], () => {
+gulp.task('test', [':test:build'], () => {
   let patternRoot = path.join(COMPONENTS_DIR, '**/*');
 
   // Configure the Karma server and override the autoWatch and singleRun just in case.
@@ -68,8 +66,6 @@ gulp.task('test', [':test:deps'], () => {
   server.start();
   server.on('browser_register', runTests);
 
-  // Watch for file changes, rebuild and run the tests.
-  gulp.watch(patternRoot + '.ts', () => runSequence(':build:components:ts:spec', runTests));
-  gulp.watch(patternRoot + '.scss', () => runSequence(':build:components:scss', runTests));
-  gulp.watch(patternRoot + '.html', () => runSequence(':build:components:assets', runTests));
+  // Whenever a file change has been recognized, rebuild and re-run the tests.
+  gulp.watch(patternRoot + '.+(ts|scss|html)', () => runSequence(':test:build', runTests));
 });

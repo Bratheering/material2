@@ -5,7 +5,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 3000;
 __karma__.loaded = function () {};
 
 var baseDir = '/base';
-var configFile = baseDir + '/dist/specs/material/system-config-spec.js';
+var configFile = baseDir + '/dist/packages/material/system-config-spec.js';
 var specFiles = Object.keys(window.__karma__.files).filter(isMaterialSpecFile);
 
 // Configure the base path for dist/
