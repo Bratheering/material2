@@ -14,6 +14,8 @@ task('payload', ['library:build'], () => {
   let results = {
     umd_kb: getBundleSize('material.umd.js'),
     umd_minified_uglify_kb: getBundleSize('material.umd.min.js'),
+    fesm_2015: getBundleSize('material.js'),
+    fesm_2014: getBundleSize('material.es5.js'),
     timestamp: Date.now()
   };
 
