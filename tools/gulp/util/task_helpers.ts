@@ -161,7 +161,10 @@ export function vendorTask(outDir = path.join(DIST_ROOT, 'vendor')) {
     }));
 }
 
-/** Create a task that serves the dist folder. */
+/**
+ * Create a task that serves a given directory in the project.
+ * The server rewrites all node_module/ or dist/ requests to the correct directory.
+ */
 export function serverTask(packagePath: string, livereload = true) {
   // The http-rewrite-middlware only supports relative paths as rewrite destinations.
   let relativePath = path.relative(PROJECT_ROOT, packagePath);
