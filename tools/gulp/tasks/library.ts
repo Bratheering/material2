@@ -1,8 +1,8 @@
-import {task, src, dest} from 'gulp';
+import {task, src, dest, watch} from 'gulp';
 import {join} from 'path';
 import {main as ngc} from '@angular/compiler-cli';
 import {SOURCE_ROOT, DIST_ROOT, UGLIFYJS_OPTIONS} from '../constants';
-import {sequenceTask, sassBuildTask, copyTask} from '../util/task_helpers';
+import {sequenceTask, sassBuildTask, copyTask, triggerLivereload} from '../util/task_helpers';
 import {createRollupBundle} from '../util/rollup-helper';
 import {transpileFile} from '../util/ts-compiler';
 import {ScriptTarget, ModuleKind} from 'typescript';
@@ -36,6 +36,13 @@ task('library', sequenceTask(
   'library:build:umd',
   'library:build:umd:min'
 ));
+
+/** [Watch task] Rebuilds the library whenever TS, SCSS, or HTML files change. */
+task('library:watch', () => {
+  watch(join(libraryRoot, '**/*.ts'), ['build:components', triggerLivereload]);
+  watch(join(libraryRoot, '**/*.scss'), ['build:components', triggerLivereload]);
+  watch(join(libraryRoot, '**/*.html'), ['build:components', triggerLivereload]);
+});
 
 /**
  * TypeScript Compilation Tasks. Tasks are creating ESM, FESM, UMD bundles for releases.

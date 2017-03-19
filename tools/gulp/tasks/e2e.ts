@@ -3,15 +3,14 @@ import * as path from 'path';
 
 import {SOURCE_ROOT, DIST_ROOT, PROJECT_ROOT} from '../constants';
 import {
-  tsBuildTask, copyTask, buildAppTask, execNodeTask,
-  vendorTask, sequenceTask, serverTask
+  tsBuildTask, copyTask, buildAppTask, execNodeTask, sequenceTask, serverTask
 } from '../util/task_helpers';
 
 const gulpRunSequence = require('run-sequence');
 const gulpConnect = require('gulp-connect');
 
 const appDir = path.join(SOURCE_ROOT, 'e2e-app');
-const outDir = DIST_ROOT;
+const outDir = path.join(DIST_ROOT, 'packages', 'e2e-app');
 const PROTRACTOR_CONFIG_PATH = path.join(PROJECT_ROOT, 'test/protractor.conf.js');
 
 const tsconfigPath = path.join(appDir, 'tsconfig.json');
@@ -20,9 +19,6 @@ task(':watch:e2eapp', () => {
   watch(path.join(appDir, '**/*.ts'), [':build:e2eapp:ts']);
   watch(path.join(appDir, '**/*.html'), [':build:e2eapp:assets']);
 });
-
-/** Copies e2e app dependencies to build output. */
-task(':build:e2eapp:vendor', vendorTask());
 
 /** Builds e2e app ts to js. */
 task(':build:e2eapp:ts', tsBuildTask(tsconfigPath));
@@ -40,7 +36,7 @@ task(':test:protractor:setup', execNodeTask('protractor', 'webdriver-manager', [
 task(':test:protractor', execNodeTask('protractor', [PROTRACTOR_CONFIG_PATH]));
 
 /** Starts up the e2e app server. */
-task(':serve:e2eapp', serverTask(false));
+task(':serve:e2eapp', serverTask(outDir, false));
 
 /** Terminates the e2e app server */
 task(':serve:e2eapp:stop', gulpConnect.serverClose);
@@ -52,7 +48,7 @@ task('serve:e2eapp', sequenceTask('build:e2eapp', ':serve:e2eapp'));
  * [Watch task] Builds and serves e2e app, rebuilding whenever the sources change.
  * This should only be used when running e2e tests locally.
  */
-task('serve:e2eapp:watch', ['serve:e2eapp', ':watch:components', ':watch:e2eapp']);
+task('serve:e2eapp:watch', ['serve:e2eapp', 'library:watch', ':watch:e2eapp']);
 
 /**
  * Builds and serves the e2e-app and runs protractor once the e2e-app is ready.

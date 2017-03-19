@@ -4,24 +4,26 @@ declare const System: any;
 // Apply the CLI SystemJS configuration.
 System.config({
   map: {
-    'rxjs': 'vendor/rxjs',
+    'rxjs': 'node_modules/rxjs',
     'main': 'main.js',
 
     // Angular specific mappings.
-    '@angular/core': 'vendor/@angular/core/bundles/core.umd.js',
-    '@angular/common': 'vendor/@angular/common/bundles/common.umd.js',
-    '@angular/compiler': 'vendor/@angular/compiler/bundles/compiler.umd.js',
-    '@angular/http': 'vendor/@angular/http/bundles/http.umd.js',
-    '@angular/forms': 'vendor/@angular/forms/bundles/forms.umd.js',
-    '@angular/router': 'vendor/@angular/router/bundles/router.umd.js',
-    '@angular/animations': 'vendor/@angular/animations/bundles/animations.umd.js',
-    '@angular/animations/browser': 'vendor/@angular/animations/bundles/animations-browser.umd.js',
-    '@angular/platform-browser': 'vendor/@angular/platform-browser/bundles/platform-browser.umd.js',
+    '@angular/core': 'node_modules/@angular/core/bundles/core.umd.js',
+    '@angular/common': 'node_modules/@angular/common/bundles/common.umd.js',
+    '@angular/compiler': 'node_modules/@angular/compiler/bundles/compiler.umd.js',
+    '@angular/http': 'node_modules/@angular/http/bundles/http.umd.js',
+    '@angular/forms': 'node_modules/@angular/forms/bundles/forms.umd.js',
+    '@angular/router': 'node_modules/@angular/router/bundles/router.umd.js',
+    '@angular/animations': 'node_modules/@angular/animations/bundles/animations.umd.js',
+    '@angular/animations/browser':
+      'node_modules/@angular/animations/bundles/animations-browser.umd.js',
+    '@angular/platform-browser':
+      'node_modules/@angular/platform-browser/bundles/platform-browser.umd.js',
     '@angular/platform-browser/animations':
-      'vendor/@angular/platform-browser/bundles/platform-browser-animations.umd',
+      'node_modules/@angular/platform-browser/bundles/platform-browser-animations.umd.js',
     '@angular/platform-browser-dynamic':
-      'vendor/@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js',
-    '@angular/material': '@angular/material/bundles/material.umd.js'
+      'node_modules/@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js',
+    '@angular/material': 'dist/bundles/material.umd.js'
   },
   packages: {
     // Thirdparty barrels.

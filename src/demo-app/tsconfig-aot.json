@@ -15,7 +15,7 @@
     ],
     "paths": {
       "@angular/material": [
-        "./@angular/material"
+        "./material"
       ]
     }
   },
