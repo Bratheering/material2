@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as chalk from 'chalk';
 
 /** Compiles a TypeScript project with possible extra options. */
-export function compileProject(project: string, options: ts.CompilerOptions) {
+export function compileProject(project: string, options: ts.CompilerOptions = {}) {
   let parsed = parseProjectConfig(project, options);
   let program = ts.createProgram(parsed.fileNames, parsed.options);
 

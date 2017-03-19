@@ -45,7 +45,7 @@ task('library:watch', () => {
 });
 
 /**
- * TypeScript Compilation Tasks. Tasks are creating ESM, FESM, UMD bundles for releases.
+ * TypeScript compilation tasks. Tasks are creating ESM, FESM, UMD bundles for releases.
  **/
 
 task('library:build:esm', () => ngc(tsconfigPath, {basePath: libraryRoot}));
@@ -78,7 +78,7 @@ task('library:build:umd:min', () => {
 });
 
 /**
- * Asset Tasks. Building SaSS files and inlining CSS, HTML files into the ESM output.
+ * Asset tasks. Building SaSS files and inlining CSS, HTML files into the ESM output.
  **/
 
 task('library:assets', ['library:assets:scss', 'library:assets:html']);
