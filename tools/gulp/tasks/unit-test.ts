@@ -1,20 +1,19 @@
-import gulp = require('gulp');
-import path = require('path');
-
+import {join} from 'path';
+import {task, watch} from 'gulp';
 import {main as ngc} from '@angular/compiler-cli';
 import {PROJECT_ROOT, COMPONENTS_DIR} from '../constants';
 import {sequenceTask} from '../util/task_helpers';
 
-const karma = require('karma');
+// There are no type definitions available for these imports.
 const runSequence = require('run-sequence');
 
-const tsconfigFile = path.join(COMPONENTS_DIR, 'tsconfig-specs.json');
+const tsconfigFile = join(COMPONENTS_DIR, 'tsconfig-specs.json');
 
 /** Builds the library with a tsconfig file that includes spec files. */
-gulp.task(':test:build:library-specs', () => ngc(tsconfigFile, {basePath: COMPONENTS_DIR}));
+task(':test:build:library-specs', () => ngc(tsconfigFile, {basePath: COMPONENTS_DIR}));
 
 /** Builds everything that is necessary for karma. */
-gulp.task(':test:build', sequenceTask(
+task(':test:build', sequenceTask(
   'clean',
   ':test:build:library-specs',
   'library:assets',
@@ -25,9 +24,12 @@ gulp.task(':test:build', sequenceTask(
  * Runs the unit tests. Does not watch for changes.
  * This task should be used when running tests on the CI server.
  */
-gulp.task('test:single-run', [':test:build'], (done: () => void) => {
+task('test:single-run', [':test:build'], (done: () => void) => {
+  // Load karma not outside. Karma pollutes Promise with a different implementation.
+  let karma = require('karma');
+
   new karma.Server({
-    configFile: path.join(PROJECT_ROOT, 'test/karma.conf.js'),
+    configFile: join(PROJECT_ROOT, 'test/karma.conf.js'),
     singleRun: true
   }, (exitCode: number) => {
     // Immediately exit the process if Karma reported errors, because due to
@@ -47,12 +49,14 @@ gulp.task('test:single-run', [':test:build'], (done: () => void) => {
  *
  * This task should be used when running unit tests locally.
  */
-gulp.task('test', [':test:build'], () => {
-  let patternRoot = path.join(COMPONENTS_DIR, '**/*');
+task('test', [':test:build'], () => {
+  let patternRoot = join(COMPONENTS_DIR, '**/*');
+  // Load karma not outside. Karma pollutes Promise with a different implementation.
+  let karma = require('karma');
 
   // Configure the Karma server and override the autoWatch and singleRun just in case.
   let server = new karma.Server({
-    configFile: path.join(PROJECT_ROOT, 'test/karma.conf.js'),
+    configFile: join(PROJECT_ROOT, 'test/karma.conf.js'),
     autoWatch: false,
     singleRun: false
   });
@@ -67,5 +71,5 @@ gulp.task('test', [':test:build'], () => {
   server.on('browser_register', runTests);
 
   // Whenever a file change has been recognized, rebuild and re-run the tests.
-  gulp.watch(patternRoot + '.+(ts|scss|html)', () => runSequence(':test:build', runTests));
+  watch(patternRoot + '.+(ts|scss|html)', () => runSequence(':test:build', runTests));
 });

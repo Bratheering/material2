@@ -22,12 +22,9 @@ task('build:release', function(done: () => void) {
 });
 
 /** Task that merges the different bundles and outputs into the release folder. */
-task(':build:release:copy', copyTask([
-  join(DIST_BUNDLES, '**/*.js'),
-  join(DIST_MATERIAL, '**/*'),
-  join(COMPONENTS_DIR, 'package.json'),
-  join(PROJECT_ROOT, 'LICENSE')
-], DIST_RELEASE));
+task(':build:release:copy', () => {
+
+});
 
 /** Make sure we're logged in. */
 task(':publish:whoami', execTask('npm', ['whoami'], {

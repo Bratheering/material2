@@ -1,16 +1,18 @@
-import {task, src, dest, watch} from 'gulp';
-import {join} from 'path';
+import {task, watch} from 'gulp';
+import {join, dirname} from 'path';
 import {main as ngc} from '@angular/compiler-cli';
 import {SOURCE_ROOT, DIST_BUNDLES, DIST_MATERIAL, UGLIFYJS_OPTIONS} from '../constants';
 import {sequenceTask, sassBuildTask, copyTask, triggerLivereload} from '../util/task_helpers';
 import {createRollupBundle} from '../util/rollup-helper';
 import {transpileFile} from '../util/ts-compiler';
 import {ScriptTarget, ModuleKind} from 'typescript';
+import {writeFileSync} from 'fs';
+import {green} from 'chalk';
+import {sync as glob} from 'glob';
 
 // There are no type definitions available for these imports.
-const gulpUglify = require('gulp-uglify');
-const gulpRename = require('gulp-rename');
 const inlineResources = require('../../../scripts/release/inline-resources');
+const uglify = require('uglify-js');
 
 const libraryRoot = join(SOURCE_ROOT, 'lib');
 const tsconfigPath = join(libraryRoot, 'tsconfig.json');
@@ -19,11 +21,7 @@ const tsconfigPath = join(libraryRoot, 'tsconfig.json');
 const materialDir = DIST_MATERIAL;
 const bundlesDir = DIST_BUNDLES;
 
-// Paths to the different output files.
 const esmMainFile = join(materialDir, 'index.js');
-const fesm2015File = join(bundlesDir, 'material.js');
-const fesm2014File = join(bundlesDir, 'material.es5.js');
-const umdBundleFile = join(bundlesDir, 'material.umd.js');
 
 task('library:build', sequenceTask(
   'clean',
@@ -31,10 +29,7 @@ task('library:build', sequenceTask(
   // Inline assets into ESM output.
   'library:assets:inline',
   // Build bundles on top of inlined ESM output.
-  'library:build:fesm-2015',
-  'library:build:fesm-2014',
-  'library:build:umd',
-  'library:build:umd:min'
+  'library:build:all',
 ));
 
 /** [Watch task] Rebuilds the library whenever TS, SCSS, or HTML files change. */
@@ -50,32 +45,54 @@ task('library:watch', () => {
 
 task('library:build:esm', () => ngc(tsconfigPath, {basePath: libraryRoot}));
 
-task('library:build:fesm-2015', () => {
-  return src(esmMainFile)
-    .pipe(createRollupBundle('es', 'material.js'))
-    .pipe(dest(bundlesDir));
+task('library:build:all', () => buildEntryPoint(esmMainFile));
+
+task('library:build:packages', () => {
+  return Promise.all(glob('*/index.js', { cwd: materialDir }).map(file => {
+    return buildEntryPoint(join(materialDir, file), dirname(file));
+  }));
 });
 
-task('library:build:fesm-2014', () => {
+
+/** Builds a library entrypoint. If no entry name is specified it builds the whole library. */
+async function buildEntryPoint(entryFile: string, entryName = '') {
+  let baseFileName = entryName ? `material-${entryName}` : 'material';
+  let moduleName = entryName ? `ng.material.${entryName}` : 'ng.material';
+
+  // List of paths for the specified entrypoint.
+  let fesm2015File = join(bundlesDir, `${baseFileName}.js`);
+  let fesm2014File = join(bundlesDir, `${baseFileName}.es5.js`);
+  let umdFile = join(bundlesDir, `${baseFileName}.umd.js`);
+  let umdMinFile = join(bundlesDir, `${baseFileName}.umd.min.js`);
+
+  // Build FESM-2015 bundle file.
+  await createRollupBundle({
+    moduleName: moduleName,
+    entry: entryFile,
+    dest: fesm2015File,
+    format: 'es',
+  });
+
+  // Downlevel FESM-2015 file to ES5.
   transpileFile(fesm2015File, fesm2014File, {
     target: ScriptTarget.ES5,
     module: ModuleKind.ES2015,
     allowJs: true
   });
-});
 
-task('library:build:umd', () => {
-  return src(fesm2014File)
-    .pipe(createRollupBundle('umd', 'material.umd.js'))
-    .pipe(dest(bundlesDir));
-});
+  // Create UMD bundle of FESM-2014 output.
+  await createRollupBundle({
+    moduleName: moduleName,
+    entry: fesm2014File,
+    dest: umdFile,
+    format: 'umd'
+  });
 
-task('library:build:umd:min', () => {
-  return src(umdBundleFile)
-    .pipe(gulpUglify(UGLIFYJS_OPTIONS))
-    .pipe(gulpRename({suffix: '.min'}))
-    .pipe(dest(bundlesDir));
-});
+  // Output a minified version of the UMD bundle
+  writeFileSync(umdMinFile, uglify.minify(umdFile, UGLIFYJS_OPTIONS).code);
+
+  console.log(green(`Built module ${moduleName} successfully.`));
+}
 
 /**
  * Asset tasks. Building SaSS files and inlining CSS, HTML files into the ESM output.

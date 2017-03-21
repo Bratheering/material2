@@ -1,7 +1,7 @@
 import {LICENSE_BANNER} from '../constants';
 
 // There are no type definitions available for these imports.
-const gulpRollup = require('gulp-better-rollup');
+const rollup = require('rollup');
 
 const ROLLUP_GLOBALS = {
   // Angular dependencies
@@ -35,22 +35,30 @@ const ROLLUP_GLOBALS = {
   'rxjs/Observable': 'Rx'
 };
 
+export type BundleConfig = {
+  entry: string;
+  dest: string;
+  format: string;
+  moduleName: string;
+};
+
 /** Creates a rollup bundles of the Material components.*/
-export function createRollupBundle(format: string, outFile: string) {
-  let rollupOptions = {
+export function createRollupBundle(config: BundleConfig): Promise<any> {
+  let bundleOptions = {
     context: 'this',
-    external: Object.keys(ROLLUP_GLOBALS)
+    external: Object.keys(ROLLUP_GLOBALS),
+    entry: config.entry
   };
 
-  let rollupGenerateOptions = {
+  let writeOptions = {
     // Keep the moduleId empty because we don't want to force developers to a specific moduleId.
     moduleId: '',
-    moduleName: 'ng.material',
+    moduleName: config.moduleName || 'ng.material',
     banner: LICENSE_BANNER,
-    format: format,
-    dest: outFile,
+    format: config.format,
+    dest: config.dest,
     globals: ROLLUP_GLOBALS,
   };
 
-  return gulpRollup(rollupOptions, rollupGenerateOptions);
+  return rollup.rollup(bundleOptions).then((bundle: any) => bundle.write(writeOptions));
 }
