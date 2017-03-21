@@ -29,7 +29,7 @@ task('library:build', sequenceTask(
   // Inline assets into ESM output.
   'library:assets:inline',
   // Build bundles on top of inlined ESM output.
-  'library:build:all',
+  'library:build:bundles',
 ));
 
 /** [Watch task] Rebuilds the library whenever TS, SCSS, or HTML files change. */
@@ -44,26 +44,27 @@ task('library:watch', () => {
  **/
 
 task('library:build:esm', () => ngc(tsconfigPath, {basePath: libraryRoot}));
+task('library:build:bundles', () => buildEntryBundles(esmMainFile));
+task('library:build:bundles:packages', () => {
+  let entryFiles = glob('*/index.js', { cwd: materialDir });
 
-task('library:build:all', () => buildEntryPoint(esmMainFile));
-
-task('library:build:packages', () => {
-  return Promise.all(glob('*/index.js', { cwd: materialDir }).map(file => {
-    return buildEntryPoint(join(materialDir, file), dirname(file));
+  return Promise.all(entryFiles.map(file => {
+    let moduleName = dirname(file);
+    let entryPath = join(materialDir, file);
+    return buildEntryBundles(entryPath, moduleName, join(bundlesDir, 'secondary'));
   }));
 });
 
-
 /** Builds a library entrypoint. If no entry name is specified it builds the whole library. */
-async function buildEntryPoint(entryFile: string, entryName = '') {
+async function buildEntryBundles(entryFile: string, entryName = '', outDir = bundlesDir) {
   let baseFileName = entryName ? `material-${entryName}` : 'material';
   let moduleName = entryName ? `ng.material.${entryName}` : 'ng.material';
 
   // List of paths for the specified entrypoint.
-  let fesm2015File = join(bundlesDir, `${baseFileName}.js`);
-  let fesm2014File = join(bundlesDir, `${baseFileName}.es5.js`);
-  let umdFile = join(bundlesDir, `${baseFileName}.umd.js`);
-  let umdMinFile = join(bundlesDir, `${baseFileName}.umd.min.js`);
+  let fesm2015File = join(outDir, `${baseFileName}.js`);
+  let fesm2014File = join(outDir, `${baseFileName}.es5.js`);
+  let umdFile = join(outDir, `${baseFileName}.umd.js`);
+  let umdMinFile = join(outDir, `${baseFileName}.umd.min.js`);
 
   // Build FESM-2015 bundle file.
   await createRollupBundle({
