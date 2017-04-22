@@ -177,7 +177,7 @@ export class MdSlideToggle extends _MdSlideToggleMixinBase
 
   /** Implemented as part of ControlValueAccessor. */
   writeValue(value: any): void {
-    this.checked = value;
+    this.checked = !!value;
   }
 
   /** Implemented as part of ControlValueAccessor. */
