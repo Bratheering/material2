@@ -16,7 +16,7 @@ import {
 import {MenuPositionX, MenuPositionY} from './menu-positions';
 import {MdMenuInvalidPositionX, MdMenuInvalidPositionY} from './menu-errors';
 import {MdMenuItem} from './menu-item';
-import {FocusKeyManager} from '../core/a11y/focus-key-manager';
+import {_FocusKeyManager} from '@angular/material/core';
 import {MdMenuPanel} from './menu-panel';
 import {Subscription} from 'rxjs/Subscription';
 import {transformMenu, fadeInItems} from './menu-animations';
@@ -35,7 +35,7 @@ import {transformMenu, fadeInItems} from './menu-animations';
   exportAs: 'mdMenu'
 })
 export class MdMenu implements AfterContentInit, MdMenuPanel, OnDestroy {
-  private _keyManager: FocusKeyManager;
+  private _keyManager: _FocusKeyManager;
   private _xPosition: MenuPositionX = 'after';
   private _yPosition: MenuPositionY = 'below';
 
@@ -76,7 +76,7 @@ export class MdMenu implements AfterContentInit, MdMenuPanel, OnDestroy {
   @Input() overlapTrigger = true;
 
   ngAfterContentInit() {
-    this._keyManager = new FocusKeyManager(this.items).withWrap();
+    this._keyManager = new _FocusKeyManager(this.items).withWrap();
     this._tabSubscription = this._keyManager.tabOut.subscribe(() => this._emitCloseEvent());
   }
 

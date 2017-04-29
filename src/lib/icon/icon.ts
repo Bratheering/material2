@@ -10,8 +10,15 @@ import {
   ViewEncapsulation,
   AfterViewChecked,
 } from '@angular/core';
+<<<<<<< HEAD
 import {MdIconRegistry} from './icon-registry';
 import {MdIconNameNotFoundError, MdIconInvalidNameError} from './icon-errors';
+=======
+import {Http} from '@angular/http';
+import {DomSanitizer} from '@angular/platform-browser';
+import {MdError} from '@angular/material/core';
+import {MdIconRegistry, MdIconNameNotFoundError} from './icon-registry';
+>>>>>>> Switch all imports between packages
 
 
 /**
