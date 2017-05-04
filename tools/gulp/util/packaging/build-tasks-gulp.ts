@@ -1,12 +1,12 @@
 import {task, watch} from 'gulp';
 import {join} from 'path';
 import {main as tsc} from '@angular/tsc-wrapped';
-import {SOURCE_ROOT, DIST_ROOT} from '../constants';
-import {sequenceTask, sassBuildTask, copyTask, triggerLivereload} from './task_helpers';
-import {composeRelease, buildPackage} from './package-build';
+import {SOURCE_ROOT, DIST_ROOT} from '../../constants';
+import {sequenceTask, sassBuildTask, copyTask, triggerLivereload} from '../task_helpers';
+import {composeRelease, buildPackages} from './build-functions';
 
 // There are no type definitions available for these imports.
-const inlineResources = require('../../../scripts/release/inline-resources');
+const inlineResources = require('../../../../scripts/release/inline-resources');
 
 /**
  * Creates a set of gulp tasks that can build the specified package.
@@ -55,7 +55,7 @@ export function createPackageBuildTasks(packageName: string, requiredPackages: s
   task(`${packageName}:build:esm`, () => tsc(tsconfigBuild, {basePath: packageRoot}));
   task(`${packageName}:build:esm:tests`, () => tsc(tsconfigTests, {basePath: packageRoot}));
 
-  task(`${packageName}:build:bundles`, () => buildPackage(esmMainFile, packageOut, packageName));
+  task(`${packageName}:build:bundles`, () => buildPackages(esmMainFile, packageRoot, packageName));
 
   /**
    * Asset tasks. Building SASS files and inlining CSS, HTML files into the ESM output.

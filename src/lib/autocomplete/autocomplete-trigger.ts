@@ -15,7 +15,6 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {DOCUMENT} from '@angular/platform-browser';
 import {MdAutocomplete} from './autocomplete';
 import {Observable} from 'rxjs/Observable';
-import {Dir} from '../core/rtl/dir';
 import {Subscription} from 'rxjs/Subscription';
 
 import {MdInputContainer} from '@angular/material/input';
