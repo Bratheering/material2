@@ -4,6 +4,7 @@ import {basename, join, dirname} from 'path';
 import {LICENSE_BANNER, MATERIAL_VERSION} from '../../constants';
 import {addPureAnnotations} from './annotate-pure';
 import {inlineMetadataResources} from './inline-resources';
+import {BuildPackage} from './build-functions';
 
 // There are no type definitions available for these imports.
 const uglify = require('uglify-js');
