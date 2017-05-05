@@ -14,7 +14,8 @@ import {
   createMetadataFile,
   addPureAnnotationsToFile,
   uglifyFile,
-  remapSourcemap
+  remapSourcemap,
+  getSortedSecondaries,
 } from './build-utils';
 
 /**
@@ -52,7 +53,9 @@ export function composeRelease(packageName: string) {
 }
 
 export async function createPackageOutput(buildPackage: BuildPackage) {
+  // Cretae package output for each secondary package.
   buildPackage.secondaries.forEach(createPackageOutput);
+
   console.log(buildPackage.moduleName);
 }
 
@@ -128,7 +131,7 @@ export class BuildPackage {
 
     if (!parent) {
       // Resolve secondary packages by searching for folders inside of the current package.
-      this.secondaries = glob('*/', {cwd: sourcePath}).map(pkgName => {
+      this.secondaries = getSortedSecondaries(this).map(pkgName => {
         return new BuildPackage(basename(pkgName), join(sourcePath, pkgName), this);
       });
     }

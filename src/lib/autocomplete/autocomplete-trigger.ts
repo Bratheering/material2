@@ -20,7 +20,7 @@ import {Subscription} from 'rxjs/Subscription';
 import {MdInputContainer} from '@angular/material/input';
 import {
   ScrollDispatcher, PositionStrategy, MdOption, MdOptionSelectionChange, ConnectedPositionStrategy,
-  ENTER, UP_ARROW, DOWN_ARROW, Overlay, OverlayRef, OverlayState, TemplatePortal,
+  ENTER, UP_ARROW, DOWN_ARROW, Overlay, OverlayRef, OverlayState, TemplatePortal, Dir,
   RepositionScrollStrategy
 } from '@angular/material/core';
 

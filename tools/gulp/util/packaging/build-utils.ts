@@ -1,4 +1,4 @@
-import {readFileSync, writeFileSync, mkdirpSync, copySync} from 'fs-extra';
+import {readFileSync, writeFileSync, mkdirpSync, copySync, existsSync} from 'fs-extra';
 import {sync as glob} from 'glob';
 import {basename, join, dirname} from 'path';
 import {LICENSE_BANNER, MATERIAL_VERSION} from '../../constants';
@@ -9,6 +9,7 @@ import {BuildPackage} from './build-functions';
 // There are no type definitions available for these imports.
 const uglify = require('uglify-js');
 const sorcery = require('sorcery');
+const toposort = require('toposort');
 
 /** Minifies a JavaScript file using UglifyJS. Also writes sourcemaps to the output. */
 export function uglifyFile(inputPath: string, outputPath: string) {
@@ -91,4 +92,30 @@ export function copyFiles(fromPath: string, fileGlob: string, outDir: string) {
 export async function remapSourcemap(sourceFile: string) {
   // Once sorcery loaded the chain of sourcemaps, the new sourcemap will be written asynchronously.
   return (await sorcery.load(sourceFile)).write();
+}
+
+/**
+ * Function that resolves all secondary packages of a build package. The dependencies will be
+ * sorted using a topological graph.
+ */
+export function getSortedSecondaries(buildPackage: BuildPackage): string[] {
+  const packages = glob('*/', {cwd: buildPackage.sourcePath}).map(pkgName => basename(pkgName));
+  const depsPath = join(buildPackage.sourcePath, 'package-config.json');
+  const depsConfig = existsSync(depsPath) ? require(depsPath) : {};
+  const depsMap: string[][] = [];
+  const globalDeps = depsConfig['*'] || [];
+
+  packages.forEach(pkgName => {
+    const pkgDeps = depsConfig[pkgName] || [];
+
+    // Add global dependencie to each secondary package. Avoid cyclic dependencies.
+    globalDeps
+      .filter((globalDep: string) => globalDep !== pkgName)
+      .forEach((depName: string) => depsMap.push([depName, pkgName]));
+
+    // Add specific dependencies for the current secondary package.
+    pkgDeps.forEach((depName: string) => depsMap.push([depName, pkgName]));
+  });
+
+  return toposort(depsMap);
 }

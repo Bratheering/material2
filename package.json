@@ -110,6 +110,7 @@
     "selenium-webdriver": "^3.1.0",
     "sorcery": "^0.10.0",
     "stylelint": "^7.8.0",
+    "toposort": "^1.0.3",
     "travis-after-modes": "0.0.7",
     "ts-node": "^3.0.0",
     "tslint": "^5.1.0",
