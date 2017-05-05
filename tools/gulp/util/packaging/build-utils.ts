@@ -1,7 +1,8 @@
 import {readFileSync, writeFileSync, mkdirpSync, copySync, existsSync} from 'fs-extra';
 import {sync as glob} from 'glob';
+import {tmpdir} from 'os';
 import {basename, join, dirname} from 'path';
-import {LICENSE_BANNER, MATERIAL_VERSION} from '../../constants';
+import {LICENSE_BANNER, MATERIAL_VERSION, PROJECT_ROOT} from '../../constants';
 import {addPureAnnotations} from './annotate-pure';
 import {inlineMetadataResources} from './inline-resources';
 import {BuildPackage} from './build-functions';
@@ -118,4 +119,24 @@ export function getSortedSecondaries(buildPackage: BuildPackage): string[] {
   });
 
   return toposort(depsMap);
+}
+
+
+export function createPackageTsconfig(buildPackage: BuildPackage) {
+  const basePackagePath = (buildPackage.parent || buildPackage).sourcePath;
+  const baseTsconfig = join(basePackagePath, 'tsconfig-build.json');
+  const tsconfigOut = join(PROJECT_ROOT, 'dist/build/', `tsconfig-${buildPackage.name}.json`);
+  const entryFile = join(buildPackage.sourcePath, 'index.ts');
+
+  let tsconfigContent = readFileSync(baseTsconfig, 'utf-8');
+
+  tsconfigContent = tsconfigContent.replace(/\$BASE_PATH/g, basePackagePath);
+  tsconfigContent = tsconfigContent.replace(/\$ENTRY_FILE/g, entryFile);
+  tsconfigContent = tsconfigContent.replace(/\$PACKAGE_NAME/g, buildPackage.name);
+  tsconfigContent = tsconfigContent.replace(/\$PROJECT_ROOT/g, PROJECT_ROOT);
+
+  mkdirpSync(dirname(tsconfigOut));
+  writeFileSync(tsconfigOut, tsconfigContent);
+
+  return tsconfigOut;
 }

@@ -1,4 +1,4 @@
-import {MdError} from '../core';
+import {MdError} from '@angular/material/core';
 
 /**
  * Exception thrown when attempting to load an icon with a name that cannot be found.

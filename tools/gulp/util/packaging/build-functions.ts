@@ -5,6 +5,7 @@ import {ScriptTarget, ModuleKind} from 'typescript';
 import {sync as glob} from 'glob';
 import {SOURCE_ROOT, DIST_ROOT, DIST_BUNDLES, PROJECT_ROOT} from '../../constants';
 import {existsSync} from 'fs-extra';
+import {main as ngc} from '@angular/tsc-wrapped';
 
 import {
   inlinePackageMetadataFiles,
@@ -16,6 +17,7 @@ import {
   uglifyFile,
   remapSourcemap,
   getSortedSecondaries,
+  createPackageTsconfig
 } from './build-utils';
 
 /**
@@ -53,10 +55,18 @@ export function composeRelease(packageName: string) {
 }
 
 export async function createPackageOutput(buildPackage: BuildPackage) {
-  // Cretae package output for each secondary package.
-  buildPackage.secondaries.forEach(createPackageOutput);
+  // Create package output for each secondary package.
+  for (const secondaryPackage of buildPackage.secondaries) {
+    await createPackageOutput(secondaryPackage);
+  }
+  
+  const packageTsconfig = createPackageTsconfig(buildPackage);
 
-  console.log(buildPackage.moduleName);
+  console.log('Building', buildPackage.name);
+
+  await ngc(packageTsconfig, {basePath: ''});
+
+  console.log('Done', buildPackage.name);
 }
 
 

@@ -37,11 +37,11 @@ export function createPackageBuildTasks(packageName: string, requiredPackages: s
     // Build all required packages before building.
     ...requiredPackages.map(pkgName => `${pkgName}:build`),
     // Build ESM and assets output.
-    [`${packageName}:build:esm`, `${packageName}:assets`],
+    [`${packageName}:build:bundles`, `${packageName}:assets`],
     // Inline assets into ESM output.
-    `${packageName}:assets:inline`,
+   // `${packageName}:assets:inline`,
     // Build bundles on top of inlined ESM output.
-    `${packageName}:build:bundles`,
+   // `${packageName}:build:bundles`,
   ));
 
   /**
@@ -52,9 +52,6 @@ export function createPackageBuildTasks(packageName: string, requiredPackages: s
   /**
    * TypeScript compilation tasks. Tasks are creating ESM, FESM, UMD bundles for releases.
    */
-  task(`${packageName}:build:esm`, () => tsc(tsconfigBuild, {basePath: packageRoot}));
-  task(`${packageName}:build:esm:tests`, () => tsc(tsconfigTests, {basePath: packageRoot}));
-
   task(`${packageName}:build:bundles`, () => createPackageOutput(buildPackage));
 
   /**

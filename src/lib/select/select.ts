@@ -39,6 +39,7 @@ import {ControlValueAccessor, NgControl} from '@angular/forms';
 import {MdSelectDynamicMultipleError, MdSelectNonArrayValueError} from './select-errors';
 
 import 'rxjs/add/observable/merge';
+import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/startWith';
 
 
