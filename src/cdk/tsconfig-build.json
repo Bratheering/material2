@@ -8,7 +8,7 @@
     "module": "es2015",
     "moduleResolution": "node",
     "outDir": "$PROJECT_ROOT/dist/packages/cdk",
-    "rootDir": "$PROJECT_ROOT",
+    "rootDir": "$BASE_PATH",
     "baseUrl": "$PROJECT_ROOT",
     "sourceMap": true,
     "inlineSources": true,
@@ -16,10 +16,7 @@
     "lib": ["es2015", "dom"],
     "skipLibCheck": true,
     "types": [],
-    "paths": {
-      "@angular/cdk/*": ["./dist/packages/cdk/*"],
-      "@angular/material": ["./dist/packages/material"]
-    }
+    "paths": {}
   },
   "files": [
     "$ENTRY_FILE"
@@ -28,7 +25,7 @@
     "annotateForClosureCompiler": true,
     "strictMetadataEmit": true,
     "skipTemplateCodegen": true,
-    "flatModuleOutFile": "index.js",
+    "flatModuleOutFile": "$PACKAGE_NAME-flat.js",
     "flatModuleId": "$MODULE_ID"
   }
 }

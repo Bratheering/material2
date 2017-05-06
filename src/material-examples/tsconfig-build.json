@@ -7,26 +7,30 @@
     "experimentalDecorators": true,
     "module": "es2015",
     "moduleResolution": "node",
-    "outDir": "../../dist/packages/material-examples",
-    "rootDir": ".",
+    "outDir": "$PROJECT_ROOT/dist/packages/material-examples",
+    "rootDir": "$BASE_PATH",
+    "baseUrl": "$PROJECT_ROOT",
     "sourceMap": true,
     "inlineSources": true,
     "target": "es2015",
     "lib": ["es2015", "dom"],
     "skipLibCheck": true,
     "types": [],
-    "baseUrl": ".",
     "paths": {
-      "@angular/material": ["../../dist/packages/material/public_api"]
+      "@angular/cdk": ["./dist/packages/cdk"],
+      "@angular/cdk/*": ["./dist/packages/cdk/*"],
+      "@angular/material": ["./dist/packages/material"],
+      "@angular/material/*": ["./dist/packages/material/*"]
     }
   },
   "files": [
-    "public_api.ts"
+    "$ENTRY_FILE"
   ],
   "angularCompilerOptions": {
     "annotateForClosureCompiler": true,
     "strictMetadataEmit": true,
-    "flatModuleOutFile": "index.js",
-    "skipTemplateCodegen": true
+    "skipTemplateCodegen": true,
+    "flatModuleOutFile": "$PACKAGE_NAME-flat.js",
+    "flatModuleId": "$MODULE_ID"
   }
 }

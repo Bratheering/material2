@@ -65,21 +65,22 @@ export async function createPackageOutput(buildPackage: BuildPackage) {
 
   // Build package using the Angular compiler.
   await ngc(packageTsconfig, {basePath: ''});
+
+  await buildPackageBundles(buildPackage);
 }
 
 
 /** Builds the bundles for the specified package. */
 async function buildPackageBundles(buildPackage: BuildPackage) {
-  const {name, moduleName, outputPath} = buildPackage;
-  const entryFile = join(outputPath, 'index.js');
-
-  /*
+  const {name, moduleName, outputPath, parent} = buildPackage;
+  const entryFile = join(outputPath, `${name}-flat.js`);
+  const bundlesPath = join(DIST_BUNDLES, parent ? parent.name : '');
 
   // List of paths to the package bundles.
-  let fesm2015File = join(DIST_BUNDLES, buildPackage.parent.name, `${name}.js`);
-  let fesm2014File = join(DIST_BUNDLES, parentPackage, `${name}.es5.js`);
-  let umdFile = join(DIST_BUNDLES, parentPackage, `${name}.umd.js`);
-  let umdMinFile = join(DIST_BUNDLES, parentPackage, `${name}.umd.min.js`);
+  let fesm2015File = join(bundlesPath, `${name}.js`);
+  let fesm2014File = join(bundlesPath, `${name}.es5.js`);
+  let umdFile = join(bundlesPath, `${name}.umd.js`);
+  let umdMinFile = join(bundlesPath, `${name}.umd.min.js`);
 
   // Build FESM-2015 bundle file.
   await createRollupBundle({
@@ -115,7 +116,7 @@ async function buildPackageBundles(buildPackage: BuildPackage) {
 
   uglifyFile(umdFile, umdMinFile);
 
-  await remapSourcemap(umdMinFile);*/
+  await remapSourcemap(umdMinFile);
 }
 
 export class BuildPackage {
@@ -133,8 +134,8 @@ export class BuildPackage {
   secondaries: BuildPackage[] = [];
 
   constructor(public name: string, public sourcePath: string, public parent?: BuildPackage) {
-    this.outputPath = join(DIST_ROOT, 'packages', name);
-    this.releasePath = join(DIST_ROOT, 'releases', name);
+    this.outputPath = join(DIST_ROOT, 'packages', parent ? parent.name : '', name);
+    this.releasePath = join(DIST_ROOT, 'releases', parent ? parent.name : name);
     this.moduleName =  parent ? `ng.${parent.name}.${name}` : `ng.${name}`;
 
     if (!parent) {

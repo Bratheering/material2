@@ -102,7 +102,7 @@ export async function remapSourcemap(sourceFile: string) {
  * sorted using a topological graph.
  */
 export function getSortedSecondaries(buildPackage: BuildPackage): string[] {
-  const packages = glob('*/', {cwd: buildPackage.sourcePath}).map(pkgName => basename(pkgName));
+  const packages = glob('*/index.ts', {cwd: buildPackage.sourcePath}).map(dirname);
   const depsPath = join(buildPackage.sourcePath, 'package-config.json');
   const depsConfig = existsSync(depsPath) ? require(depsPath) : {};
   const depsMap: string[][] = [];

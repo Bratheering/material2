@@ -29,7 +29,7 @@
     "annotateForClosureCompiler": true,
     "strictMetadataEmit": true,
     "skipTemplateCodegen": true,
-    "flatModuleOutFile": "$PACKAGE_NAME-bundle.js",
+    "flatModuleOutFile": "$PACKAGE_NAME-flat.js",
     "flatModuleId": "$MODULE_ID"
   }
 }
