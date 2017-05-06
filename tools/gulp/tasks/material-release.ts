@@ -3,7 +3,7 @@ import {join} from 'path';
 import {writeFileSync} from 'fs';
 import {Bundler} from 'scss-bundle';
 import {execNodeTask, sequenceTask} from '../util/task_helpers';
-import {composeRelease} from '../util/packaging/build-functions';
+import {composeRelease, BuildPackage} from '../util/packaging/build-functions';
 import {COMPONENTS_DIR, DIST_MATERIAL, DIST_RELEASES} from '../constants';
 
 // There are no type definitions available for these imports.
@@ -20,11 +20,14 @@ const prebuiltThemeGlob = join(DIST_MATERIAL, '**/theming/prebuilt/*.css');
 // Matches all SCSS files in the library.
 const allScssGlob = join(COMPONENTS_DIR, '**/*.scss');
 
+/** Build package for the material library.*/
+const buildPackage = new BuildPackage('material', COMPONENTS_DIR);
+
 /**
  * Overwrite the release task for the material package. The material release will include special
  * files, like a bundled theming SCSS file or all prebuilt themes.
  */
-task('material:build-release', ['material:prepare-release'], () => composeRelease('material'));
+task('material:build-release', ['material:prepare-release'], () => composeRelease(buildPackage));
 
 /**
  * Task that will build the material package. It will also copy all prebuilt themes and build

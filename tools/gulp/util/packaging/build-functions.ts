@@ -2,14 +2,13 @@ import {join, basename} from 'path';
 import {createRollupBundle} from '../rollup-helper';
 import {transpileFile} from '../ts-compiler';
 import {ScriptTarget, ModuleKind} from 'typescript';
-import {sync as glob} from 'glob';
 import {SOURCE_ROOT, DIST_ROOT, DIST_BUNDLES, PROJECT_ROOT} from '../../constants';
-import {existsSync} from 'fs-extra';
 import {main as ngc} from '@angular/tsc-wrapped';
 
 import {
   inlinePackageMetadataFiles,
   copyFiles,
+  renameFiles,
   updatePackageVersion,
   createTypingFile,
   createMetadataFile,
@@ -17,7 +16,8 @@ import {
   uglifyFile,
   remapSourcemap,
   getSortedSecondaries,
-  createPackageTsconfig
+  createPackageTsconfig,
+  createSecondaryPackageFile
 } from './build-utils';
 
 /**
@@ -25,33 +25,38 @@ import {
  * release folder structure. The output will also contain a README and the according package.json
  * file. Additionally the package will be Closure Compiler and AOT compatible.
  */
-export function composeRelease(packageName: string) {
-  // To avoid refactoring of the project the package material will map to the source path `lib/`.
-  const sourcePath = join(SOURCE_ROOT, packageName === 'material' ? 'lib' : packageName);
-  const packagePath = join(DIST_ROOT, 'packages', packageName);
-  const releasePath = join(DIST_ROOT, 'releases', packageName);
+export function composeRelease(buildPackage: BuildPackage) {
+  const {name, sourcePath, outputPath, releasePath} = buildPackage;
 
   const umdOutput = join(releasePath, 'bundles');
   const fesmOutput = join(releasePath, '@angular');
 
-  inlinePackageMetadataFiles(packagePath);
+  inlinePackageMetadataFiles(outputPath);
 
   // Copy primary entry point bundles
-  copyFiles(DIST_BUNDLES, `${packageName}.umd?(.min).js?(.map)`, umdOutput);
-  copyFiles(DIST_BUNDLES, `${packageName}?(.es5).js?(.map)`, fesmOutput);
+  copyFiles(DIST_BUNDLES, `${name}.umd?(.min).js?(.map)`, umdOutput);
+  copyFiles(DIST_BUNDLES, `${name}?(.es5).js?(.map)`, fesmOutput);
 
   // Copy secondary entry point bundles.
-  copyFiles(DIST_BUNDLES, `${packageName}/!(*.umd)?(.min).js?(.map)`, fesmOutput);
-  copyFiles(join(DIST_BUNDLES, packageName), `*.umd?(.min).js?(.map)`, umdOutput);
+  copyFiles(DIST_BUNDLES, `${name}/!(*.umd)?(.min).js?(.map)`, fesmOutput);
+  copyFiles(join(DIST_BUNDLES, name), `*.umd?(.min).js?(.map)`, umdOutput);
 
-  copyFiles(packagePath, '**/*.+(d.ts|metadata.json)', join(releasePath, 'typings'));
+  copyFiles(outputPath, '**/*.+(d.ts|metadata.json)', join(releasePath, 'typings'));
   copyFiles(PROJECT_ROOT, 'LICENSE', releasePath);
   copyFiles(SOURCE_ROOT, 'README.md', releasePath);
   copyFiles(sourcePath, 'package.json', releasePath);
 
+  // Rename all *-flat files to index files. This is temporary and can be removed once
+  // the NGC supports having `index.ts` files as entry points for flat modules.
+  renameFiles(releasePath, '**/*-flat.d.ts', 'index.d.ts');
+  renameFiles(releasePath, '**/*-flat.metadata.json', 'index.metadata.json');
+
   updatePackageVersion(releasePath);
-  createTypingFile(releasePath, packageName);
-  createMetadataFile(releasePath, packageName);
+  createTypingFile(releasePath, name);
+  createMetadataFile(releasePath, name);
+
+  // Create package files for every secondary entry point.
+  buildPackage.secondaries.forEach(secondary => createSecondaryPackageFile(secondary));
 }
 
 export async function createPackageOutput(buildPackage: BuildPackage) {
@@ -130,6 +135,9 @@ export class BuildPackage {
   /** Module name of the package. Used to built UMD bundles. */
   moduleName: string = null;
 
+  /** Import name of the package. Used to generate package.json files. */
+  importName: string = null;
+
   /** Build packages that can be secondary entry-points. */
   secondaries: BuildPackage[] = [];
 
@@ -137,6 +145,7 @@ export class BuildPackage {
     this.outputPath = join(DIST_ROOT, 'packages', parent ? parent.name : '', name);
     this.releasePath = join(DIST_ROOT, 'releases', parent ? parent.name : name);
     this.moduleName =  parent ? `ng.${parent.name}.${name}` : `ng.${name}`;
+    this.importName = `@angular/${parent ? parent.name + '/' : ''}${name}`;
 
     if (!parent) {
       // Resolve secondary packages by searching for folders inside of the current package.

@@ -1,6 +1,5 @@
 import {task, watch} from 'gulp';
 import {join} from 'path';
-import {main as tsc} from '@angular/tsc-wrapped';
 import {SOURCE_ROOT, DIST_ROOT} from '../../constants';
 import {sequenceTask, sassBuildTask, copyTask, triggerLivereload} from '../task_helpers';
 import {composeRelease, createPackageOutput, BuildPackage} from './build-functions';
@@ -17,9 +16,6 @@ export function createPackageBuildTasks(packageName: string, requiredPackages: s
   // To avoid refactoring of the project the package material will map to the source path `lib/`.
   const packageRoot = join(SOURCE_ROOT, packageName === 'material' ? 'lib' : packageName);
   const packageOut = join(DIST_ROOT, 'packages', packageName);
-
-  const tsconfigBuild = join(packageRoot, 'tsconfig-build.json');
-  const tsconfigTests = join(packageRoot, 'tsconfig-tests.json');
 
   // Build package for the specified package.
   const buildPackage = new BuildPackage(packageName, packageRoot);
@@ -48,7 +44,10 @@ export function createPackageBuildTasks(packageName: string, requiredPackages: s
    * Release tasks for the package. Tasks compose the release output for the package.
    */
   task(`${packageName}:build-release:clean`, sequenceTask('clean', `${packageName}:build-release`));
-  task(`${packageName}:build-release`, [`${packageName}:build`], () => composeRelease(packageName));
+  task(`${packageName}:build-release`, [`${packageName}:build`], () => {
+    return composeRelease(buildPackage);
+  });
+
   /**
    * TypeScript compilation tasks. Tasks are creating ESM, FESM, UMD bundles for releases.
    */

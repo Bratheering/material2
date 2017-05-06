@@ -1,6 +1,5 @@
-import {readFileSync, writeFileSync, mkdirpSync, copySync, existsSync} from 'fs-extra';
+import {renameSync, readFileSync, writeFileSync, mkdirpSync, copySync, existsSync} from 'fs-extra';
 import {sync as glob} from 'glob';
-import {tmpdir} from 'os';
 import {basename, join, dirname} from 'path';
 import {LICENSE_BANNER, MATERIAL_VERSION, PROJECT_ROOT} from '../../constants';
 import {addPureAnnotations} from './annotate-pure';
@@ -88,6 +87,13 @@ export function copyFiles(fromPath: string, fileGlob: string, outDir: string) {
   });
 }
 
+/** Function to rename files using globs. */
+export function renameFiles(fromPath: string, fileGlob: string, newFileName: string) {
+  glob(fileGlob, {cwd: fromPath}).forEach(file => {
+    renameSync(join(fromPath, file), join(fromPath, dirname(file), newFileName));
+  });
+}
+
 /**
  * Finds the original sourcemap of the file and maps it to the current file.
  * This is useful when multiple transformation happen (e.g TSC -> Rollup -> Uglify)
@@ -129,9 +135,6 @@ export function createPackageTsconfig(buildPackage: BuildPackage) {
   const basePackagePath = basePackage.sourcePath;
   const baseTsconfig = join(basePackagePath, 'tsconfig-build.json');
 
-  const parentName = buildPackage.parent && buildPackage.parent.name;
-  const flatModuleId = `@angular/${parentName ? parentName + '/' : ''}${buildPackage.name}`;
-
   const tsconfigOut = join(PROJECT_ROOT, 'dist/build/', `tsconfig-${buildPackage.name}.json`);
   const entryFile = join(buildPackage.sourcePath, 'index.ts');
 
@@ -141,10 +144,28 @@ export function createPackageTsconfig(buildPackage: BuildPackage) {
   tsconfigContent = tsconfigContent.replace(/\$ENTRY_FILE/g, unixPath(entryFile));
   tsconfigContent = tsconfigContent.replace(/\$PACKAGE_NAME/g, buildPackage.name);
   tsconfigContent = tsconfigContent.replace(/\$PROJECT_ROOT/g, unixPath(PROJECT_ROOT));
-  tsconfigContent = tsconfigContent.replace(/\$MODULE_ID/g, flatModuleId);
+  tsconfigContent = tsconfigContent.replace(/\$MODULE_ID/g, buildPackage.importName);
 
   mkdirpSync(dirname(tsconfigOut));
   writeFileSync(tsconfigOut, tsconfigContent);
 
   return tsconfigOut;
+}
+
+
+/** Creates a secondary entry point for a given package. */
+export function createSecondaryPackageFile(buildPackage: BuildPackage) {
+  const entryPath = join(buildPackage.releasePath, buildPackage.name);
+
+  const packageJson = {
+    name: buildPackage.importName,
+    typings: `../typings/${buildPackage.name}/index.d.ts`,
+    main: `../bundles/${buildPackage.name}.umd.js`,
+    module: `../@angular/${buildPackage.parent.name}/${buildPackage.name}.es5.js`,
+    es2015: `../@angular/${buildPackage.parent.name}/${buildPackage.name}.js`,
+  };
+
+  // Create the secondary entry point folder.
+  mkdirpSync(entryPath);
+  writeFileSync(join(entryPath, 'package.json'), JSON.stringify(packageJson, null, 2));
 }
