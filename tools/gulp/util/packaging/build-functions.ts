@@ -59,14 +59,12 @@ export async function createPackageOutput(buildPackage: BuildPackage) {
   for (const secondaryPackage of buildPackage.secondaries) {
     await createPackageOutput(secondaryPackage);
   }
-  
+
+  // Create a temporary tsconfig file for the current package.
   const packageTsconfig = createPackageTsconfig(buildPackage);
 
-  console.log('Building', buildPackage.name);
-
+  // Build package using the Angular compiler.
   await ngc(packageTsconfig, {basePath: ''});
-
-  console.log('Done', buildPackage.name);
 }
 
 

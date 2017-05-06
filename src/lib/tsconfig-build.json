@@ -30,6 +30,6 @@
     "strictMetadataEmit": true,
     "skipTemplateCodegen": true,
     "flatModuleOutFile": "$PACKAGE_NAME-bundle.js",
-    "flatModuleId": "@angular/material"
+    "flatModuleId": "$MODULE_ID"
   }
 }

@@ -12,6 +12,8 @@ const uglify = require('uglify-js');
 const sorcery = require('sorcery');
 const toposort = require('toposort');
 
+const unixPath = (path: string) => path.replace(/\\/g, '/');
+
 /** Minifies a JavaScript file using UglifyJS. Also writes sourcemaps to the output. */
 export function uglifyFile(inputPath: string, outputPath: string) {
   const sourcemapOut = `${outputPath}.map`;
@@ -109,7 +111,7 @@ export function getSortedSecondaries(buildPackage: BuildPackage): string[] {
   packages.forEach(pkgName => {
     const pkgDeps = depsConfig[pkgName] || [];
 
-    // Add global dependencie to each secondary package. Avoid cyclic dependencies.
+    // Add global dependencies to each secondary package. Avoid cyclic dependencies.
     globalDeps
       .filter((globalDep: string) => globalDep !== pkgName)
       .forEach((depName: string) => depsMap.push([depName, pkgName]));
@@ -121,19 +123,25 @@ export function getSortedSecondaries(buildPackage: BuildPackage): string[] {
   return toposort(depsMap);
 }
 
-
+/** Creates a temporary tsconfig for the specified package. */
 export function createPackageTsconfig(buildPackage: BuildPackage) {
-  const basePackagePath = (buildPackage.parent || buildPackage).sourcePath;
+  const basePackage = buildPackage.parent || buildPackage;
+  const basePackagePath = basePackage.sourcePath;
   const baseTsconfig = join(basePackagePath, 'tsconfig-build.json');
+
+  const parentName = buildPackage.parent && buildPackage.parent.name;
+  const flatModuleId = `@angular/${parentName ? parentName + '/' : ''}${buildPackage.name}`;
+
   const tsconfigOut = join(PROJECT_ROOT, 'dist/build/', `tsconfig-${buildPackage.name}.json`);
   const entryFile = join(buildPackage.sourcePath, 'index.ts');
 
   let tsconfigContent = readFileSync(baseTsconfig, 'utf-8');
 
-  tsconfigContent = tsconfigContent.replace(/\$BASE_PATH/g, basePackagePath);
-  tsconfigContent = tsconfigContent.replace(/\$ENTRY_FILE/g, entryFile);
+  tsconfigContent = tsconfigContent.replace(/\$BASE_PATH/g, unixPath(basePackagePath));
+  tsconfigContent = tsconfigContent.replace(/\$ENTRY_FILE/g, unixPath(entryFile));
   tsconfigContent = tsconfigContent.replace(/\$PACKAGE_NAME/g, buildPackage.name);
-  tsconfigContent = tsconfigContent.replace(/\$PROJECT_ROOT/g, PROJECT_ROOT);
+  tsconfigContent = tsconfigContent.replace(/\$PROJECT_ROOT/g, unixPath(PROJECT_ROOT));
+  tsconfigContent = tsconfigContent.replace(/\$MODULE_ID/g, flatModuleId);
 
   mkdirpSync(dirname(tsconfigOut));
   writeFileSync(tsconfigOut, tsconfigContent);

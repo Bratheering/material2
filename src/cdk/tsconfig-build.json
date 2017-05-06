@@ -29,6 +29,6 @@
     "strictMetadataEmit": true,
     "skipTemplateCodegen": true,
     "flatModuleOutFile": "index.js",
-    "flatModuleId": "@angular/cdk"
+    "flatModuleId": "$MODULE_ID"
   }
 }
